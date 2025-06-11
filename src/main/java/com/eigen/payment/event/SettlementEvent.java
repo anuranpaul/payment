@@ -1,4 +1,3 @@
-
 package com.eigen.payment.event;
 
 import lombok.Builder;
@@ -8,13 +7,12 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class PaymentEvent {
+public class SettlementEvent {
     private String paymentId;
-    private String eventType; 
-    private String status;
+    private String merchantId;
     private BigDecimal amount;
     private String currency;
-    private String merchantId;
     private String transactionReference;
+    private String status; // PENDING, COMPLETED, FAILED
     private LocalDateTime timestamp;
 }

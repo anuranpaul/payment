@@ -17,6 +17,10 @@ public class RabbitConfig {
     public static final String PAYMENT_EXCHANGE = "payment.exchange";
     public static final String PAYMENT_ROUTING_KEY = "payment.routing.key";
 
+    public static final String SETTLEMENT_QUEUE = "settlement.queue";
+    public static final String SETTLEMENT_EXCHANGE = "settlement.exchange";
+    public static final String SETTLEMENT_ROUTING_KEY = "settlement.routing.key";
+
     @Bean
     public Queue paymentQueue() {
         return QueueBuilder.durable(PAYMENT_QUEUE).build();
@@ -38,6 +42,24 @@ public class RabbitConfig {
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public Queue settlementQueue() {
+        return QueueBuilder.durable(SETTLEMENT_QUEUE).build();
+    }
+
+    @Bean
+    public TopicExchange settlementExchange() {
+        return new TopicExchange(SETTLEMENT_EXCHANGE);
+    }
+
+    @Bean
+    public Binding settlementBinding() {
+        return BindingBuilder
+                .bind(settlementQueue())
+                .to(settlementExchange())
+                .with(SETTLEMENT_ROUTING_KEY);
     }
 
     @Bean

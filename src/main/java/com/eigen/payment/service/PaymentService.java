@@ -28,51 +28,60 @@ public class PaymentService {
     @Transactional
     public PaymentResponse processPayment(PaymentRequest request) {
         log.info("Processing payment for merchant: {}", request.getMerchantId());
-        
+
         try {
+            // Check for existing transaction (idempotency)
+            if (request.getTransactionId() != null) {
+                Payment existingPayment = paymentRepository.findByTransactionReference(request.getTransactionId()).orElse(null);
+                if (existingPayment != null) {
+                    log.info("Duplicate transaction detected: {}", request.getTransactionId());
+                    return buildPaymentResponse(existingPayment);
+                }
+            }
+
             // Encrypt sensitive data
             String encryptedCardNumber = encryptionService.encrypt(request.getCardNumber());
-            
+
             // Create payment entity
             Payment payment = Payment.builder()
                     .cardNumberEncrypted(encryptedCardNumber)
                     .cardHolderName(request.getCardHolderName())
-                    .expiryMonth(request.getExpiryMonth())
-                    .expiryYear(request.getExpiryYear())
+                    .expiryMonth(String.valueOf(request.getExpiryMonth()))
+                    .expiryYear(String.valueOf(request.getExpiryYear()))
                     .amount(request.getAmount())
                     .currency(request.getCurrency())
                     .description(request.getDescription())
                     .merchantId(request.getMerchantId())
-                    .status(Payment.PaymentStatus.PROCESSING)
-                    .transactionReference(UUID.randomUUID().toString())
+                    .status(Payment.PaymentStatus.INITIATED)
+                    .transactionReference(request.getTransactionId() != null ? request.getTransactionId()
+                            : UUID.randomUUID().toString())
                     .build();
-            
+
             // Save payment
             payment = paymentRepository.save(payment);
-            
+
+            // Publish PAYMENT_INITIATED event to Kafka
+            eventPublisher.publishPaymentInitiated(payment);
+
+            // Update status to processing
+            payment.setStatus(Payment.PaymentStatus.PROCESSING);
+            payment = paymentRepository.save(payment);
+
             // Simulate payment processing
             payment.setStatus(Payment.PaymentStatus.COMPLETED);
             payment = paymentRepository.save(payment);
-            
-            // Publish event
-            eventPublisher.publishPaymentProcessed(payment);
-            
+
+            // Publish PAYMENT_COMPLETED event and settlement message
+            eventPublisher.publishPaymentCompleted(payment);
+            eventPublisher.publishSettlementRequest(payment);
+
             log.info("Payment processed successfully: {}", payment.getId());
-            
-            return PaymentResponse.builder()
-                    .paymentId(payment.getId())
-                    .status(payment.getStatus().name())
-                    .amount(payment.getAmount())
-                    .currency(payment.getCurrency())
-                    .description(payment.getDescription())
-                    .merchantId(payment.getMerchantId())
-                    .processedAt(LocalDateTime.now())
-                    .transactionReference(payment.getTransactionReference())
-                    .build();
-                    
+
+            return buildPaymentResponse(payment);
+
         } catch (Exception e) {
             log.error("Payment processing failed: {}", e.getMessage(), e);
-            
+
             return PaymentResponse.builder()
                     .status("FAILED")
                     .errorMessage(e.getMessage())
@@ -80,10 +89,23 @@ public class PaymentService {
         }
     }
 
+    private PaymentResponse buildPaymentResponse(Payment payment) {
+        return PaymentResponse.builder()
+                .paymentId(payment.getId())
+                .status(payment.getStatus().name())
+                .amount(payment.getAmount())
+                .currency(payment.getCurrency())
+                .description(payment.getDescription())
+                .merchantId(payment.getMerchantId())
+                .processedAt(payment.getCreatedAt())
+                .transactionReference(payment.getTransactionReference())
+                .build();
+    }
+
     public PaymentResponse getPayment(String paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found: " + paymentId));
-        
+
         return PaymentResponse.builder()
                 .paymentId(payment.getId())
                 .status(payment.getStatus().name())
