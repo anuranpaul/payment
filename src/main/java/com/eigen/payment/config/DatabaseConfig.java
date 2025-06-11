@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-@EnableJpaRepositories(basePackages = "com.yourcompany.payment.repository")
+@EnableJpaRepositories(basePackages = "com.eigen.payment.repository")
 @EnableTransactionManagement
 public class DatabaseConfig {
 }
