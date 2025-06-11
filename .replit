@@ -62,3 +62,19 @@ mainClass = "Main"
 build = ["javac", "-classpath", ".:target/dependency/*", "-d", ".", "$(find . -type f -name '*.java')"]
 run = ["java", "-classpath", ".:target/dependency/*", "Main"]
 deploymentTarget = "cloudrun"
+
+[workflows]
+runButton = "Spring Boot App"
+
+[[workflows.workflow]]
+name = "Spring Boot App"
+author = 30481813
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn clean compile"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn spring-boot:run"

@@ -1,14 +1,12 @@
-// import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// import org.junit.jupiter.api.Test;
+package com.example.app;
 
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
 public class Main {
-  public static void main(String[] args) {
-    System.out.println("Hello world!");
-  }
-
-  // @Test
-  // void addition() {
-  //     assertEquals(2, 1 + 1);
-  // }
+    public static void main(String[] args) {
+        SpringApplication.run(Main.class, args);
+    }
 }
