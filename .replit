@@ -64,10 +64,23 @@ run = ["java", "-classpath", ".:target/dependency/*", "Main"]
 deploymentTarget = "cloudrun"
 
 [workflows]
-runButton = "Spring Boot App"
+runButton = "Payment App"
 
 [[workflows.workflow]]
 name = "Spring Boot App"
+author = 30481813
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn clean compile"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn spring-boot:run"
+
+[[workflows.workflow]]
+name = "Payment App"
 author = 30481813
 mode = "sequential"
 
