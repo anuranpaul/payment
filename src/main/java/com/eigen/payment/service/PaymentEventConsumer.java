@@ -20,8 +20,7 @@ public class PaymentEventConsumer {
     @KafkaListener(topics = "payment-events", groupId = "payment-processor")
     public void handlePaymentEvent(
             @Payload String message,
-            @Header(name = "kafka_receivedMessageKey") String transactionId,
-            Acknowledgment acknowledgment) {
+            @Header(name = "kafka_receivedMessageKey") String transactionId) {
 
         try {
             log.info("Received payment event: {} for transaction: {}", message, transactionId);
@@ -30,7 +29,7 @@ public class PaymentEventConsumer {
             Payment payment = paymentRepository.findByTransactionReference(transactionId).orElse(null);
             if (payment == null) {
                 log.warn("Payment not found for transaction: {}", transactionId);
-                acknowledgment.acknowledge();
+                // acknowledgment.acknowledge();
                 return;
             }
 
@@ -44,7 +43,7 @@ public class PaymentEventConsumer {
             }
 
             // Acknowledge successful processing
-            acknowledgment.acknowledge();
+            // acknowledgment.acknowledge();
             log.info("Successfully processed payment event for: {}", transactionId);
 
         } catch (Exception e) {

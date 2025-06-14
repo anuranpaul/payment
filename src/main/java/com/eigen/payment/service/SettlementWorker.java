@@ -1,6 +1,5 @@
 package com.eigen.payment.service;
 
-
 import com.eigen.payment.entity.Payment;
 import com.eigen.payment.repository.PaymentRepository;
 import com.eigen.payment.event.SettlementEvent; 
@@ -27,16 +26,14 @@ public class SettlementWorker {
 
             Payment payment = paymentRepository.findById(settlementEvent.getPaymentId())
                     .orElseThrow(() -> new RuntimeException("Payment not found: " + settlementEvent.getPaymentId()));
-
-            // Update payment status to settlement pending
             payment.setStatus(Payment.PaymentStatus.SETTLEMENT_PENDING);
             paymentRepository.save(payment);
 
-            // Simulate settlement processing
+            
             Thread.sleep(1000); // Simulate external settlement API call
 
             //random failure simulation
-            if (Math.random() < 0.2) { // 10% chance of failure
+            if (Math.random() < 0.2) { 
                 throw new RuntimeException("Simulated settlement failure");
             }
 
@@ -49,7 +46,6 @@ public class SettlementWorker {
         } catch (Exception e) {
             log.error("Settlement processing failed for payment: {}", settlementEvent.getPaymentId(), e);
 
-            // Update payment status to failed
             Payment payment = paymentRepository.findById(settlementEvent.getPaymentId()).orElse(null);
             if (payment != null) {
                 payment.setStatus(Payment.PaymentStatus.FAILED);
