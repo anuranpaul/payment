@@ -35,6 +35,11 @@ public class SettlementWorker {
             // Simulate settlement processing
             Thread.sleep(1000); // Simulate external settlement API call
 
+            //random failure simulation
+            if (Math.random() < 0.2) { // 10% chance of failure
+                throw new RuntimeException("Simulated settlement failure");
+            }
+
             // Update payment status to settled
             payment.setStatus(Payment.PaymentStatus.SETTLED);
             paymentRepository.save(payment);
