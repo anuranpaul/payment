@@ -16,6 +16,8 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
 
     List<Payment> findByMerchantIdAndStatus(String merchantId, Payment.PaymentStatus status);
 
+    List<Payment> findAllByOrderByCreatedAtDesc();
+
     @Query("SELECT p FROM Payment p WHERE p.merchantId = :merchantId ORDER BY p.createdAt DESC")
     List<Payment> findByMerchantIdOrderByCreatedAtDesc(@Param("merchantId") String merchantId);
 }

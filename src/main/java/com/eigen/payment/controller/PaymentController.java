@@ -3,7 +3,9 @@ package com.eigen.payment.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 import com.eigen.payment.dto.PaymentRequest;
 import com.eigen.payment.dto.PaymentResponse;
@@ -25,9 +27,16 @@ public class PaymentController {
     }
 
     @GetMapping("/{paymentId}")
-    public ResponseEntity<PaymentResponse> getPayment(@PathVariable String paymentId) {
+    public ResponseEntity<PaymentResponse> getPayment(@PathVariable("paymentId") String paymentId) {
         PaymentResponse response = paymentService.getPayment(paymentId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/history")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<PaymentResponse>> getPaymentHistory() {
+        List<PaymentResponse> history = paymentService.getPaymentHistory();
+        return ResponseEntity.ok(history);
     }
 
     @GetMapping("/health")

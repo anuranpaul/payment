@@ -15,6 +15,9 @@ import com.eigen.payment.security.EncryptionService;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor
@@ -116,5 +119,26 @@ public class PaymentService {
                 .processedAt(payment.getCreatedAt())
                 .transactionReference(payment.getTransactionReference())
                 .build();
+    }
+
+    public List<PaymentResponse> getPaymentHistory() {
+        log.info("Retrieving payment history");
+        try {
+            List<Payment> payments = paymentRepository.findAllByOrderByCreatedAtDesc();
+
+            if (payments.isEmpty()) {
+                log.info("No payment records found");
+                return Collections.emptyList();
+            }
+
+            log.info("Found {} payment records", payments.size());
+            return payments.stream()
+                    .map(this::buildPaymentResponse)
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            log.error("Error retrieving payment history: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to retrieve payment history", e);
+        }
     }
 }
